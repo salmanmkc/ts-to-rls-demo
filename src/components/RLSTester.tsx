@@ -3,6 +3,9 @@ import { Play, Copy, CheckCircle, AlertCircle } from 'lucide-react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import * as RLS from 'rls-dsl';
 
+// Import bundled type definitions - single file, zero maintenance
+import rlsDslBundledTypes from 'rls-dsl/dist/bundle.d.ts?raw';
+
 const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
   .on('documents')
   .for('SELECT')
@@ -160,12 +163,53 @@ export default function RLSTester() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Disable all TypeScript diagnostics (errors, warnings)
+  // Configure Monaco with bundled type definitions
   const handleEditorWillMount = (monaco: Monaco) => {
+    // Add bundled type definitions to Monaco
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      rlsDslBundledTypes,
+      'file:///node_modules/rls-dsl/index.d.ts'
+    );
+
+    // Create global declarations so functions work without imports
+    const globalDeclarations = `
+      import type * as RLS from 'rls-dsl';
+
+      declare global {
+        const createPolicy: typeof RLS.createPolicy;
+        const column: typeof RLS.column;
+        const auth: typeof RLS.auth;
+        const session: typeof RLS.session;
+        const currentUser: typeof RLS.currentUser;
+        const from: typeof RLS.from;
+        const hasRole: typeof RLS.hasRole;
+        const alwaysTrue: typeof RLS.alwaysTrue;
+        const call: typeof RLS.call;
+        const policies: typeof RLS.policies;
+      }
+    `;
+
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      globalDeclarations,
+      'file:///globals.d.ts'
+    );
+
+    // Disable diagnostics to avoid error indicators
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
       noSyntaxValidation: true,
       noSuggestionDiagnostics: true,
+    });
+
+    // Configure TypeScript compiler options
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.CommonJS,
+      noEmit: true,
+      esModuleInterop: true,
+      allowJs: true,
     });
   };
 
@@ -273,6 +317,8 @@ export default function RLSTester() {
                 automaticLayout: true,
                 tabSize: 2,
                 wordWrap: 'on',
+                quickSuggestions: true,
+                suggestOnTriggerCharacters: true,
               }}
             />
           </div>
