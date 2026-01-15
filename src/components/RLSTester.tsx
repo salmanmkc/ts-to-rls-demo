@@ -4,7 +4,7 @@ import Editor, { Monaco } from '@monaco-editor/react';
 import * as RLS from 'rls-dsl';
 
 // Import bundled type definitions - single file, zero maintenance
-import rlsDslBundledTypes from 'rls-dsl/dist/bundle.d.ts?raw';
+import rlsDslBundledTypes from '../rls-dsl-types.d.ts?raw';
 
 const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
   .on('documents')
