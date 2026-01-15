@@ -322,6 +322,7 @@ export default function RLSTester() {
                   lineNumbers: 'on',
                   scrollBeyondLastLine: false,
                   automaticLayout: true,
+                  wordWrap: 'on',
                 }}
               />
             ) : (
