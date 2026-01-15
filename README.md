@@ -6,16 +6,24 @@ An interactive demo application for testing and generating PostgreSQL Row Level 
 
 ## Features
 
-- Write TypeScript code using the RLS DSL
-- Generate PostgreSQL RLS policy SQL in real-time
-- Built-in examples covering common use cases:
+- 🎨 **Monaco Editor** with TypeScript intellisense and autocomplete
+- 🚀 Write TypeScript code using the RLS DSL with real-time syntax highlighting
+- 📝 Generate PostgreSQL RLS policy SQL instantly
+- 📋 Copy to clipboard functionality
+- 💡 Error display with helpful messages
+- 🔍 Function reference panel
+- 14+ built-in examples covering common use cases:
   - User ownership policies
   - Multi-tenant isolation
   - Owner or member access
   - Complex OR conditions
+  - Pattern matching (LIKE/ILIKE)
+  - Null checks (isNull/isNotNull)
+  - DELETE operations
   - Policies with index suggestions
   - INSERT/UPDATE validations with check expressions
-  - Pre-built policy templates
+  - Pre-built policy templates (userOwned, publicAccess, roleAccess)
+  - Helper methods (isOwner, isPublic)
 
 ## Getting Started
 

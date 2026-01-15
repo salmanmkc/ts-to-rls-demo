@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Play, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import * as RLS from 'rls-dsl';
 
 const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
@@ -91,6 +92,63 @@ return policy.toSQL();`,
   {
     name: 'Template',
     code: `const [policy] = policies.userOwned('documents', 'SELECT');
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'DELETE Policy',
+    code: `const policy = createPolicy('user_documents_delete')
+  .on('documents')
+  .for('DELETE')
+  .when(column('user_id').eq(auth.uid()));
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'Pattern Matching',
+    code: `const policy = createPolicy('search_documents')
+  .on('documents')
+  .for('SELECT')
+  .when(
+    column('title').ilike('%report%')
+      .or(column('category').like('Finance%'))
+  );
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'Null Checks',
+    code: `const policy = createPolicy('active_documents')
+  .on('documents')
+  .for('SELECT')
+  .when(
+    column('deleted_at').isNull()
+      .and(column('published_at').isNotNull())
+  );
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'Public Access Template',
+    code: `const policy = policies.publicAccess('documents', 'is_public');
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'Role-Based Access',
+    code: `const [policy] = policies.roleAccess('admin_data', 'admin', ['SELECT', 'UPDATE']);
+
+return policy.toSQL();`,
+  },
+  {
+    name: 'Helper Methods',
+    code: `const policy = createPolicy('document_access')
+  .on('documents')
+  .for('SELECT')
+  .when(
+    column('user_id').isOwner()
+      .or(column('is_public').isPublic())
+  );
 
 return policy.toSQL();`,
   },
@@ -191,12 +249,21 @@ export default function RLSTester() {
                 Generate
               </button>
             </div>
-            <textarea
+            <Editor
+              height="600px"
+              defaultLanguage="typescript"
+              theme="vs-dark"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1 p-6 font-mono text-sm text-slate-800 focus:outline-none resize-none min-h-[600px]"
-              placeholder="Enter your TypeScript code here..."
-              spellCheck={false}
+              onChange={(value) => setInput(value || '')}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                wordWrap: 'on',
+              }}
             />
           </div>
 
@@ -222,8 +289,8 @@ export default function RLSTester() {
                 </button>
               )}
             </div>
-            <div className="flex-1 p-6 min-h-[600px]">
-              {error ? (
+            {error ? (
+              <div className="flex-1 p-6 min-h-[600px]">
                 <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
                   <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
                   <div>
@@ -231,18 +298,29 @@ export default function RLSTester() {
                     <p className="text-red-700 text-sm font-mono">{error}</p>
                   </div>
                 </div>
-              ) : output ? (
-                <pre className="font-mono text-sm text-slate-800 whitespace-pre-wrap break-words">
-                  {output}
-                </pre>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-slate-400 text-sm">
-                    Click "Generate" to see the SQL output
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : output ? (
+              <Editor
+                height="600px"
+                defaultLanguage="sql"
+                theme="vs-dark"
+                value={output}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center min-h-[600px]">
+                <p className="text-slate-400 text-sm">
+                  Click "Generate" to see the SQL output
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
