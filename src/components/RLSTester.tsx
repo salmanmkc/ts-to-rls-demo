@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Play, Copy, CheckCircle, AlertCircle } from 'lucide-react';
-import * as RLS from '../lib/rls-dsl';
+import * as RLS from 'rls-dsl';
 
 const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
   .on('documents')
