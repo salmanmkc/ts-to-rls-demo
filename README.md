@@ -5,6 +5,21 @@ An interactive demo application for testing and generating PostgreSQL Row Level 
 **Live Demo:** https://ts-to-rls-demo.vercel.app/
 **Documentation:** https://supabase.github.io/ts-to-rls/
 
+## Testing Custom ts-to-rls Versions
+
+Want to test a specific commit or PR from the [`ts-to-rls`](https://github.com/supabase/ts-to-rls) repository? This project includes a workflow that makes it easy:
+
+1. **Find the commit SHA** from [supabase/ts-to-rls](https://github.com/supabase/ts-to-rls) that you want to test
+2. **Trigger the workflow**: Go to [Actions → Update ts-to-rls from pkg.pr.new](../../actions/workflows/update-ts-to-rls.yml) and click "Run workflow"
+3. **Enter the SHA** and run the workflow
+4. The workflow will:
+   - Install `ts-to-rls` from `pkg.pr.new` at that specific commit
+   - Create a pull request with the updated dependency
+   - Vercel will automatically deploy a preview for the PR
+5. **Test the preview** - Click the Vercel preview link in the PR to see a live demo running your custom version
+
+This is perfect for testing unreleased features, bug fixes, or experimental changes before they're merged or published to npm.
+
 ## Features
 
 - 🎨 **Monaco Editor** with TypeScript intellisense and autocomplete
