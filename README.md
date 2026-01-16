@@ -3,6 +3,7 @@
 An interactive demo application for testing and generating PostgreSQL Row Level Security (RLS) policies using the [`ts-to-rls`](https://github.com/supabase/ts-to-rls) TypeScript library.
 
 **Live Demo:** https://ts-to-rls-demo.vercel.app/
+**Documentation:** https://supabase.github.io/ts-to-rls/
 
 ## Features
 
@@ -62,8 +63,8 @@ The tester provides an editor where you can write TypeScript code using the RLS 
 ```typescript
 const policy = createPolicy('user_documents')
   .on('documents')
-  .for('SELECT')
-  .when(column('user_id').eq(auth.uid()));
+  .read()
+  .when(column('user_id').isOwner());
 
 return policy.toSQL();
 ```
@@ -72,21 +73,22 @@ Generates:
 
 ```sql
 CREATE POLICY "user_documents"
-ON "public"."documents"
+ON "documents"
 FOR SELECT
-USING ((user_id = auth.uid()));
+USING ("user_id" = auth.uid());
 ```
 
 ## Available Functions
 
 | Category | Functions |
 |----------|-----------|
-| **Policy Builder** | `createPolicy(name).on(table).for(operation).when(condition).toSQL()` |
-| **Conditions** | `column(name).eq()`, `.gt()`, `.gte()`, `.lt()`, `.lte()`, `.in()`, `.like()`, `.isNull()`, `.and()`, `.or()` |
+| **Policy Builder** | `createPolicy(name).on(table).read()`, `.write()`, `.update()`, `.delete()`, `.all()` |
+| **Clauses** | `.when(condition)`, `.allow(condition)`, `.withCheck(condition)`, `.toSQL()` |
+| **Conditions** | `column(name).eq()`, `.gt()`, `.gte()`, `.lt()`, `.lte()`, `.in()`, `.like()`, `.ilike()`, `.isNull()`, `.isNotNull()`, `.and()`, `.or()` |
+| **Helper Methods** | `column(name).isOwner()`, `.isPublic()`, `.belongsToTenant()`, `.isMemberOf(table, key)` |
 | **Context** | `auth.uid()`, `session.get(key, type)`, `currentUser()` |
 | **Subqueries** | `from(table).select(cols).where(condition).join(table, on)` |
 | **Templates** | `policies.userOwned()`, `policies.tenantIsolation()`, `policies.publicAccess()`, `policies.roleAccess()` |
-| **Operations** | `'SELECT'`, `'INSERT'`, `'UPDATE'`, `'DELETE'`, `'ALL'` |
 
 ## Tech Stack
 

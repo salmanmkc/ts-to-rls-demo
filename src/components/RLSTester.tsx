@@ -8,8 +8,8 @@ import rlsDslBundledTypes from '../ts-to-rls-types.d.ts?raw';
 
 const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
   .on('documents')
-  .for('SELECT')
-  .when(column('user_id').eq(auth.uid()));
+  .read()
+  .when(column('user_id').isOwner());
 
 return policy.toSQL();`;
 
@@ -18,8 +18,8 @@ const EXAMPLES = [
     name: 'User Ownership',
     code: `const policy = createPolicy('user_documents')
   .on('documents')
-  .for('SELECT')
-  .when(column('user_id').eq(auth.uid()));
+  .read()
+  .when(column('user_id').isOwner());
 
 return policy.toSQL();`,
   },
@@ -27,9 +27,9 @@ return policy.toSQL();`,
     name: 'Multi-Tenant',
     code: `const policy = createPolicy('tenant_isolation')
   .on('tenant_data')
-  .for('ALL')
-  .restrictive()
-  .when(column('tenant_id').eq(session.get('app.current_tenant_id', 'integer')));
+  .all()
+  .requireAll()
+  .when(column('tenant_id').belongsToTenant());
 
 return policy.toSQL();`,
   },
@@ -37,9 +37,9 @@ return policy.toSQL();`,
     name: 'Owner or Member',
     code: `const policy = createPolicy('project_access')
   .on('projects')
-  .for('SELECT')
+  .read()
   .when(
-    column('user_id').eq(auth.uid())
+    column('user_id').isOwner()
       .or(
         column('id').in(
           from('project_members')
@@ -55,10 +55,10 @@ return policy.toSQL();`,
     name: 'Complex OR',
     code: `const policy = createPolicy('project_access')
   .on('projects')
-  .for('SELECT')
+  .read()
   .when(
-    column('is_public').eq(true)
-      .or(column('user_id').eq(auth.uid()))
+    column('is_public').isPublic()
+      .or(column('user_id').isOwner())
       .or(column('organization_id').eq(session.get('app.org_id', 'uuid')))
   );
 
@@ -68,8 +68,8 @@ return policy.toSQL();`,
     name: 'With Indexes',
     code: `const policy = createPolicy('user_documents')
   .on('documents')
-  .for('SELECT')
-  .when(column('user_id').eq(auth.uid()));
+  .read()
+  .when(column('user_id').isOwner());
 
 return policy.toSQL({ includeIndexes: true });`,
   },
@@ -77,8 +77,8 @@ return policy.toSQL({ includeIndexes: true });`,
     name: 'INSERT Validation',
     code: `const policy = createPolicy('user_documents_insert')
   .on('user_documents')
-  .for('INSERT')
-  .allow(column('user_id').eq(auth.uid()));
+  .write()
+  .allow(column('user_id').isOwner());
 
 return policy.toSQL();`,
   },
@@ -86,9 +86,8 @@ return policy.toSQL();`,
     name: 'UPDATE with Check',
     code: `const policy = createPolicy('user_documents_update')
   .on('user_documents')
-  .for('UPDATE')
-  .when(column('user_id').eq(auth.uid()))
-  .withCheck(column('user_id').eq(auth.uid()));
+  .update()
+  .allow(column('user_id').isOwner());
 
 return policy.toSQL();`,
   },
@@ -102,8 +101,8 @@ return policy.toSQL();`,
     name: 'DELETE Policy',
     code: `const policy = createPolicy('user_documents_delete')
   .on('documents')
-  .for('DELETE')
-  .when(column('user_id').eq(auth.uid()));
+  .delete()
+  .when(column('user_id').isOwner());
 
 return policy.toSQL();`,
   },
@@ -111,7 +110,7 @@ return policy.toSQL();`,
     name: 'Pattern Matching',
     code: `const policy = createPolicy('search_documents')
   .on('documents')
-  .for('SELECT')
+  .read()
   .when(
     column('title').ilike('%report%')
       .or(column('category').like('Finance%'))
@@ -123,7 +122,7 @@ return policy.toSQL();`,
     name: 'Null Checks',
     code: `const policy = createPolicy('active_documents')
   .on('documents')
-  .for('SELECT')
+  .read()
   .when(
     column('deleted_at').isNull()
       .and(column('published_at').isNotNull())
@@ -133,7 +132,7 @@ return policy.toSQL();`,
   },
   {
     name: 'Public Access Template',
-    code: `const policy = policies.publicAccess('documents', 'is_public');
+    code: `const policy = policies.publicAccess('documents');
 
 return policy.toSQL();`,
   },
@@ -147,7 +146,7 @@ return policy.toSQL();`,
     name: 'Helper Methods',
     code: `const policy = createPolicy('document_access')
   .on('documents')
-  .for('SELECT')
+  .read()
   .when(
     column('user_id').isOwner()
       .or(column('is_public').isPublic())
@@ -267,12 +266,24 @@ export default function RLSTester() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-screen-2xl mx-auto p-6">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            RLS Policy DSL Tester
-          </h1>
-          <p className="text-slate-600">
-            Test and generate PostgreSQL Row Level Security policies with TypeScript
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">
+                RLS Policy DSL Tester
+              </h1>
+              <p className="text-slate-600">
+                Test and generate PostgreSQL Row Level Security policies with TypeScript
+              </p>
+            </div>
+            <a
+              href="https://supabase.github.io/ts-to-rls/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+            >
+              View Docs
+            </a>
+          </div>
         </header>
 
         <div className="mb-6">
@@ -382,15 +393,27 @@ export default function RLSTester() {
         </div>
 
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Available Functions</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-slate-900">Available Functions</h3>
+            <a
+              href="https://supabase.github.io/ts-to-rls/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            >
+              Full Documentation →
+            </a>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
             <div>
               <h4 className="font-semibold text-slate-700 mb-2">Policy Builder</h4>
               <code className="text-xs text-slate-600 block">
                 createPolicy(name)<br />
                 .on(table)<br />
-                .for(operation)<br />
+                .read() | .write()<br />
+                .update() | .delete() | .all()<br />
                 .when(condition)<br />
+                .allow(condition)<br />
                 .toSQL()
               </code>
             </div>
@@ -399,8 +422,18 @@ export default function RLSTester() {
               <code className="text-xs text-slate-600 block">
                 column(name).eq(value)<br />
                 .gt() .gte() .lt() .lte()<br />
-                .in() .like() .isNull()<br />
+                .in() .like() .ilike()<br />
+                .isNull() .isNotNull()<br />
                 .and() .or()
+              </code>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-700 mb-2">Helper Methods</h4>
+              <code className="text-xs text-slate-600 block">
+                column(name).isOwner()<br />
+                .isPublic()<br />
+                .belongsToTenant()<br />
+                .isMemberOf(table, key)
               </code>
             </div>
             <div>
@@ -427,14 +460,6 @@ export default function RLSTester() {
                 policies.tenantIsolation()<br />
                 policies.publicAccess()<br />
                 policies.roleAccess()
-              </code>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-700 mb-2">Operations</h4>
-              <code className="text-xs text-slate-600 block">
-                'SELECT' | 'INSERT'<br />
-                'UPDATE' | 'DELETE'<br />
-                'ALL'
               </code>
             </div>
           </div>
