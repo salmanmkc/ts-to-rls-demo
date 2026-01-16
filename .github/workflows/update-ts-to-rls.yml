@@ -27,9 +27,17 @@ jobs:
       - name: Install dependency from pkg.pr.new
         run: npm i https://pkg.pr.new/supabase/ts-to-rls@${{ inputs.sha }}
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf
         with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
           commit-message: "Update ts-to-rls to ${{ inputs.sha }} from pkg.pr.new"
           branch: "update-ts-to-rls-${{ inputs.sha }}"
           delete-branch: false
