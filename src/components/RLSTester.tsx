@@ -6,36 +6,36 @@ import * as RLS from 'ts-to-rls';
 // Import bundled type definitions - single file, zero maintenance
 import rlsDslBundledTypes from '../ts-to-rls-types.d.ts?raw';
 
-const EXAMPLE_CODE = `const policy = createPolicy('user_documents')
+const EXAMPLE_CODE = `const p = policy('user_documents')
   .on('documents')
   .read()
   .when(column('user_id').isOwner());
 
-return policy.toSQL();`;
+return p.toSQL();`;
 
 const EXAMPLES = [
   {
     name: 'User Ownership',
-    code: `const policy = createPolicy('user_documents')
+    code: `const p = policy('user_documents')
   .on('documents')
   .read()
   .when(column('user_id').isOwner());
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Multi-Tenant',
-    code: `const policy = createPolicy('tenant_isolation')
+    code: `const p = policy('tenant_isolation')
   .on('tenant_data')
   .all()
   .requireAll()
   .when(column('tenant_id').belongsToTenant());
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Owner or Member',
-    code: `const policy = createPolicy('project_access')
+    code: `const p = policy('project_access')
   .on('projects')
   .read()
   .when(
@@ -49,11 +49,11 @@ return policy.toSQL();`,
       )
   );
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Complex OR',
-    code: `const policy = createPolicy('project_access')
+    code: `const p = policy('project_access')
   .on('projects')
   .read()
   .when(
@@ -62,53 +62,53 @@ return policy.toSQL();`,
       .or(column('organization_id').eq(session.get('app.org_id', 'uuid')))
   );
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'With Indexes',
-    code: `const policy = createPolicy('user_documents')
+    code: `const p = policy('user_documents')
   .on('documents')
   .read()
   .when(column('user_id').isOwner());
 
-return policy.toSQL({ includeIndexes: true });`,
+return p.toSQL({ includeIndexes: true });`,
   },
   {
     name: 'INSERT Validation',
-    code: `const policy = createPolicy('user_documents_insert')
+    code: `const p = policy('user_documents_insert')
   .on('user_documents')
   .write()
   .allow(column('user_id').isOwner());
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'UPDATE with Check',
-    code: `const policy = createPolicy('user_documents_update')
+    code: `const p = policy('user_documents_update')
   .on('user_documents')
   .update()
   .allow(column('user_id').isOwner());
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Template',
-    code: `const [policy] = policies.userOwned('documents', 'SELECT');
+    code: `const [p] = policies.userOwned('documents', 'SELECT');
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'DELETE Policy',
-    code: `const policy = createPolicy('user_documents_delete')
+    code: `const p = policy('user_documents_delete')
   .on('documents')
   .delete()
   .when(column('user_id').isOwner());
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Pattern Matching',
-    code: `const policy = createPolicy('search_documents')
+    code: `const p = policy('search_documents')
   .on('documents')
   .read()
   .when(
@@ -116,11 +116,11 @@ return policy.toSQL();`,
       .or(column('category').like('Finance%'))
   );
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Null Checks',
-    code: `const policy = createPolicy('active_documents')
+    code: `const p = policy('active_documents')
   .on('documents')
   .read()
   .when(
@@ -128,23 +128,23 @@ return policy.toSQL();`,
       .and(column('published_at').isNotNull())
   );
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Public Access Template',
-    code: `const policy = policies.publicAccess('documents');
+    code: `const p = policies.publicAccess('documents');
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Role-Based Access',
-    code: `const [policy] = policies.roleAccess('admin_data', 'admin', ['SELECT', 'UPDATE']);
+    code: `const [p] = policies.roleAccess('admin_data', 'admin', ['SELECT', 'UPDATE']);
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
   {
     name: 'Helper Methods',
-    code: `const policy = createPolicy('document_access')
+    code: `const p = policy('document_access')
   .on('documents')
   .read()
   .when(
@@ -152,7 +152,7 @@ return policy.toSQL();`,
       .or(column('is_public').isPublic())
   );
 
-return policy.toSQL();`,
+return p.toSQL();`,
   },
 ];
 
@@ -175,7 +175,7 @@ export default function RLSTester() {
       import type * as RLS from 'ts-to-rls';
 
       declare global {
-        const createPolicy: typeof RLS.createPolicy;
+        const policy: typeof RLS.policy;
         const column: typeof RLS.column;
         const auth: typeof RLS.auth;
         const session: typeof RLS.session;
@@ -217,7 +217,7 @@ export default function RLSTester() {
       setError('');
 
       const func = new Function(
-        'createPolicy',
+        'policy',
         'column',
         'auth',
         'session',
@@ -228,7 +228,7 @@ export default function RLSTester() {
       );
 
       const result = func(
-        RLS.createPolicy,
+        RLS.policy,
         RLS.column,
         RLS.auth,
         RLS.session,
@@ -408,7 +408,7 @@ export default function RLSTester() {
             <div>
               <h4 className="font-semibold text-text-primary mb-2">Policy Builder</h4>
               <code className="text-xs text-text-secondary block">
-                createPolicy(name)<br />
+                policy(name)<br />
                 .on(table)<br />
                 .read() | .write()<br />
                 .update() | .delete() | .all()<br />
