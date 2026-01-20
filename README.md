@@ -1,22 +1,25 @@
 # RLS Policy DSL Tester
 
+> **Experimental Library** - This is an experimental project for testing out ideas. It is not official and not intended for production use.
+
 An interactive demo application for testing and generating PostgreSQL Row Level Security (RLS) policies using the [`ts-to-rls`](https://github.com/supabase/ts-to-rls) TypeScript library.
 
-**Live Demo:** https://ts-to-rls-demo.vercel.app/
-**Documentation:** https://supabase.github.io/ts-to-rls/
+* **Live Demo:** https://ts-to-rls-demo.vercel.app/
+* **Documentation:** https://supabase.github.io/ts-to-rls/
 
 ## Testing Custom ts-to-rls Versions
 
 Want to test a specific commit or PR from the [`ts-to-rls`](https://github.com/supabase/ts-to-rls) repository? This project includes a workflow that makes it easy:
 
-1. **Find the commit SHA** from [supabase/ts-to-rls](https://github.com/supabase/ts-to-rls) that you want to test
-2. **Trigger the workflow**: Go to [Actions → Update ts-to-rls from pkg.pr.new](../../actions/workflows/update-ts-to-rls.yml) and click "Run workflow"
-3. **Enter the SHA** and run the workflow
-4. The workflow will:
+1. **Trigger the workflow**: Go to [Actions → Update ts-to-rls from pkg.pr.new](../../actions/workflows/update-ts-to-rls.yml) and click "Run workflow"
+2. **Enter either a PR number or commit SHA**:
+   - **PR number** - Enter the PR number from [supabase/ts-to-rls](https://github.com/supabase/ts-to-rls) (the workflow will automatically fetch the latest commit from that PR)
+   - **SHA** - Enter a specific commit SHA if you want to pin to an exact commit
+3. The workflow will:
    - Install `ts-to-rls` from `pkg.pr.new` at that specific commit
    - Create a pull request with the updated dependency
    - Vercel will automatically deploy a preview for the PR
-5. **Test the preview** - Click the Vercel preview link in the PR to see a live demo running your custom version
+4. **Test the preview** - Click the Vercel preview link in the PR to see a live demo running your custom version
 
 This is perfect for testing unreleased features, bug fixes, or experimental changes before they're merged or published to npm.
 
@@ -76,12 +79,12 @@ The tester provides an editor where you can write TypeScript code using the RLS 
 ### Example
 
 ```typescript
-const policy = createPolicy('user_documents')
+const p = policy('user_documents')
   .on('documents')
   .read()
   .when(column('user_id').isOwner());
 
-return policy.toSQL();
+return p.toSQL();
 ```
 
 Generates:
@@ -92,18 +95,6 @@ ON "documents"
 FOR SELECT
 USING ("user_id" = auth.uid());
 ```
-
-## Available Functions
-
-| Category | Functions |
-|----------|-----------|
-| **Policy Builder** | `createPolicy(name).on(table).read()`, `.write()`, `.update()`, `.delete()`, `.all()` |
-| **Clauses** | `.when(condition)`, `.allow(condition)`, `.withCheck(condition)`, `.toSQL()` |
-| **Conditions** | `column(name).eq()`, `.gt()`, `.gte()`, `.lt()`, `.lte()`, `.in()`, `.like()`, `.ilike()`, `.isNull()`, `.isNotNull()`, `.and()`, `.or()` |
-| **Helper Methods** | `column(name).isOwner()`, `.isPublic()`, `.belongsToTenant()`, `.isMemberOf(table, key)` |
-| **Context** | `auth.uid()`, `session.get(key, type)`, `currentUser()` |
-| **Subqueries** | `from(table).select(cols).where(condition).join(table, on)` |
-| **Templates** | `policies.userOwned()`, `policies.tenantIsolation()`, `policies.publicAccess()`, `policies.roleAccess()` |
 
 ## Tech Stack
 
